@@ -36,33 +36,22 @@
       <el-row :gutter="20">
         <el-col :span="4">
           <div class="title">维度</div>
-          <div class="scroll-box">
-            <el-scrollbar style="height: 100%">
-              <ul class="dimension-module">
-                <li v-for="(item, index) in dimensionData" @click="toggleSelectDimension(item)"
-                    :class="{'active-li': item.flag}">
-                  <span>{{item.label}}</span>
-                  <i class="el-icon-check" v-show="item.flag"></i>
-                </li>
-              </ul>
-            </el-scrollbar>
-          </div>
-
+          <dimension-box :dimensionData="dimensionData" @clickDimensionElement="clickDimensionElement"></dimension-box>
           <div class="title">度量</div>
-          <div class="scroll-box2">
-            <el-scrollbar style="height: 100%">
-              <ul class="measure-module">
-                <li v-for="(item, index) in measureData" @click="toggleSelectMeasure(item)"
-                    :class="{'active-li': item.flag}">
-                  <span>{{item.label}}</span>
-                  <i class="el-icon-check" v-show="item.flag"></i>
-                </li>
-              </ul>
-            </el-scrollbar>
-          </div>
+          <measure-box :measureData="measureData" @clickMeasureElement="clickMeasureElement"></measure-box>
         </el-col>
         <el-col :span="20">
-          <div class="title">Custom</div>
+          <div class="title">
+            <div style="display: inline-block">
+              Table
+              <i class="iconfont icon-biaoge"></i>
+            </div>
+            <div style="cursor: pointer;display: inline-block; font-size: 14px; margin-left: 30px; color: #409eff;" @click="goChartPage">
+              <span>切换为图表</span>
+              <i class="iconfont icon-chaolianjie"></i>
+            </div>
+          </div>
+
           <div class="content-table" v-loading="tableLoading">
             <!--height: calc(100vh - 240px);-->
             <ag-grid-vue style="width: 100%; height: 74vh;" class="ag-theme-balham"
@@ -90,10 +79,14 @@
 <script>
   import draggable from 'vuedraggable'
   import {AgGridVue} from "ag-grid-vue";
+  import dimensionBox from '../components/dimensionBox'
+  import measureBox from '../components/measureBox'
 
   export default {
     data() {
       return {
+        selectDimensionValue: [],
+        selectMeasureValue: [],
         tableLoading: false,
         // baseApi: 'http://10.122.33.101:9095',
         baseApi: 'https://demo-api.cbitest.lenovo.com',
@@ -219,47 +212,48 @@
       }
     },
     methods: {
+      goChartPage() {
+        this.$router.push({path: '/chartPage'})
+      },
+      clickDimensionElement(params) {
+        console.log(params, '点击的当前值')
+        if (params.flag) {
+          // 新增加的
+          this.newArr.push(params)
+        } else {
+          // 要删除的
+          let index
+          for (let i in this.newArr) {
+            if (this.newArr[i].label === params.label) {
+              index = i
+            }
+          }
+          this.newArr.splice(index, 1)
+        }
+        this.getTableData()
+      },
+      clickMeasureElement(params) {
+        console.log(params, '点击的当前值')
+        if (params.flag) {
+          // 新增加的
+          this.newArr.push(params)
+        } else {
+          // 要删除的
+          let index
+          for (let i in this.newArr) {
+            if (this.newArr[i].label === params.label) {
+              index = i
+            }
+          }
+          this.newArr.splice(index, 1)
+        }
+        this.getTableData()
+      },
       // handleCurrentPageChange(val) {
       //   console.log(val,'当前页')
       //   this.currentPage = val
       //   this.pageChangGetTableData()
       // },
-      toggleSelectDimension(params) {
-        console.log(params, '点击的li')
-        params.flag = !params.flag
-        if (params.flag) {
-          // 新增加的
-          this.newArr.push(params)
-        } else {
-          // 要删除的
-          let index
-          for (let i in this.newArr) {
-            if (this.newArr[i].label === params.label) {
-              index = i
-            }
-          }
-          this.newArr.splice(index, 1)
-        }
-        this.getTableData()
-      },
-      toggleSelectMeasure(params) {
-        console.log(params, '点击的li')
-        params.flag = !params.flag
-        if (params.flag) {
-          // 新增加的
-          this.newArr.push(params)
-        } else {
-          // 要删除的
-          let index
-          for (let i in this.newArr) {
-            if (this.newArr[i].label === params.label) {
-              index = i
-            }
-          }
-          this.newArr.splice(index, 1)
-        }
-        this.getTableData()
-      },
       delTag(params) {
         console.log(params, '要移除的')
         params.flag = false // 和菜单栏形成联系
@@ -287,7 +281,8 @@
         let params = {
           table: this.value1
         }
-        let res = await this.axios.post(`${this.baseApi}/custom/report/condition`, params)
+        let res = await
+          this.axios.post(`${this.baseApi}/custom/report/condition`, params)
         // console.log(res,'结果')
         let resData = res.data.data
         this.dimensionData = resData.dimension.map(item => {
@@ -298,6 +293,9 @@
             type: ''
           }
         })
+        // this.selectDimensionValue = this.dimensionData.filter(item => {
+        //   return item.flag === true
+        // })
         this.measureData = resData.group.map(item => {
           return {
             value: item.value,
@@ -306,6 +304,9 @@
             type: 'warning'
           }
         })
+        // this.selectMeasureValue = this.measureData.filter(item => {
+        //   return item.flag === true
+        // })
         this.initTableData()
       },
       async initTableData() {
@@ -328,7 +329,8 @@
           page: this.currentPage,
           rows: this.currentRows
         }
-        let res = await this.axios.post(`${this.baseApi}/custom/report/table`, params)
+        let res = await
+          this.axios.post(`${this.baseApi}/custom/report/table`, params)
         // console.log(res,'表格数据')
         let resData = res.data.data
         if (Object.keys(resData.total).length !== 0) {
@@ -363,7 +365,7 @@
       async getTableData() {
         this.tableLoading = true
         this.currentPage = 1
-        console.log(this.newArr)
+        // console.log(this.newArr)
         let params = {
           dimension: this.newArr.filter(item => {
             if (item.type === '') {
@@ -379,7 +381,8 @@
           page: this.currentPage,
           rows: this.currentRows
         }
-        let res = await this.axios.post(`${this.baseApi}/custom/report/table`, params)
+        let res = await
+          this.axios.post(`${this.baseApi}/custom/report/table`, params)
         // console.log(res,'加载数据')
 
         let resData = res.data.data
@@ -423,7 +426,7 @@
       },
       async pageChangGetTableData() {
         this.tableLoading = true
-        console.log(this.newArr)
+        // console.log(this.newArr)
         let params = {
           dimension: this.newArr.filter(item => {
             if (item.type === '') {
@@ -439,7 +442,8 @@
           page: this.currentPage,
           rows: this.currentRows
         }
-        let res = await this.axios.post(`${this.baseApi}/custom/report/table`, params)
+        let res = await
+          this.axios.post(`${this.baseApi}/custom/report/table`, params)
         // console.log(res,'加载数据')
 
         let resData = res.data.data
@@ -477,13 +481,14 @@
     },
     components: {
       draggable,
-      'ag-grid-vue': AgGridVue,
+      dimensionBox,
+      measureBox,
+      'ag-grid-vue': AgGridVue
     },
     watch: {
       'newArr': {
-        handler: function (nVal) {
+        handler: function (nVal, oVal) {
           // 监听到变化，重新set列就可以
-          console.log(nVal, '的')
           let arr = nVal.map(item => {
             if (item.type === '') {
               return {
@@ -502,12 +507,6 @@
                 cellRenderer: moneyThousandth,
               }
             }
-            // return {
-            //   headerName: item.label,
-            //   field: item.value,
-            //   rowDrag: true,
-            //   suppressMovable: true
-            // }
           })
           this.SampleTable.api.setColumnDefs(arr)
         },
@@ -520,7 +519,7 @@
     mounted() {
       let _this = this
       document.getElementsByClassName('ag-body-viewport')[0].onscroll = function () {
-        if(this.scrollHeight-this.scrollTop<this.clientHeight+100){
+        if (this.scrollHeight - this.scrollTop < this.clientHeight + 100) {
           console.log("到达底部");
         }
       }
@@ -538,6 +537,7 @@
       // })
     }
   }
+
   function moneyThousandth(params) {
     if (params.value == undefined) {
       return
@@ -549,6 +549,7 @@
       return comdify(String(parseFloat(params.value)))
     }
   }
+
   function comdify(n) {
     var re = /\d{1,3}(?=(\d{3})+$)/g;
     var n1 = n.replace(/^(^-?\d+)((\.\d+)?)$/, function (s, s1, s2) {
@@ -578,16 +579,6 @@
       }
     }
     .main {
-      .scroll-box {
-        border: 1px solid $borderColor2;
-        border-radius: 5px;
-        height: 40vh;
-      }
-      .scroll-box2 {
-        height: 30vh;
-        border: 1px solid $borderColor2;
-        border-radius: 5px;
-      }
       .dimension-module, .measure-module {
         li {
           position: relative;

@@ -10,6 +10,10 @@ export default new Router({
       path: '/',
       name: 'index',
       component: DemoView
+    },
+    {
+      path: '/chartPage',
+      component: () => import('../view/chartPage')
     }
   ]
 })
