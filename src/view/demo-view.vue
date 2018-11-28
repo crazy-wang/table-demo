@@ -207,7 +207,7 @@
           toolPanelSuppressRowGroups: true
         },
         currentPage: 1,
-        currentRows: 20,
+        currentRows: 100,
         fixedTopRow: {},
       }
     },

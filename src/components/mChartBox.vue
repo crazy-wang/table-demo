@@ -41,10 +41,13 @@
     },
     props: ['measureData'],
     watch: {
-      measureData: function (nVal) {
-        this.selectData = nVal.filter(item => {
-          return item.flag === true
-        })
+      measureData: {
+        handler:  function (nVal) {
+          this.selectData = nVal.filter(item => {
+            return item.flag === true
+          })
+        },
+        deep: true
       }
     }
   }
@@ -54,7 +57,7 @@
   $borderColor: #666;
   $borderColor2: #b3b3b3;
   .scroll-box2 {
-    height: 30vh;
+    height: 40vh;
     border: 1px solid $borderColor2;
     border-radius: 5px;
   }

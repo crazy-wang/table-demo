@@ -14,6 +14,8 @@ import "../node_modules/ag-grid-community/dist/styles/ag-grid.css";
 import "../node_modules/ag-grid-community/dist/styles/ag-theme-balham.css";
 import 'ag-grid-enterprise/main'
 
+import "./style/iconfont.css"
+
 Vue.config.productionTip = false
 Vue.prototype.axios = axios
 Vue.prototype.echarts = echarts

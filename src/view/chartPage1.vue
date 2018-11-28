@@ -44,15 +44,6 @@
               :value="item.value">
             </el-option>
           </el-select>
-          <div class="title">堆叠维度<span style="color: #999;">(可选)</span></div>
-          <el-select v-model="yDimensionValue" clearable placeholder="请选择" style="width: 100%;">
-            <el-option
-              v-for="item in dimensionData"
-              :key="item.value"
-              :label="item.label"
-              :value="item.value">
-            </el-option>
-          </el-select>
           <div class="title">度量</div>
           <m-chart-box :measureData="measureData" v-model="selectMeasureValue"></m-chart-box>
         </el-col>
@@ -86,7 +77,6 @@
   export default {
     data() {
       return {
-        yDimensionValue: '',
         dimensionValue: '',
         dimensionData: [],
         selectMeasureValue: [],
@@ -111,8 +101,7 @@
         ehcartsOptionsData: {
           echart1: {}
         },
-        // colorArr: ['#37a2da', '#9fe6b8', '#ffdb5c', '#fb7293', '#96bfff']
-        colorArr: ['#82d3ec', '#f69a90', '#6ec6b1', '#8daad0', '#f6db5b','#fcb445', '#efa5c7', '#9ad7b6', '#8daad0', '#c0cb67']
+        colorArr: ['#37a2da', '#9fe6b8', '#ffdb5c', '#fb7293', '#96bfff']
       }
     },
     methods: {
@@ -169,8 +158,7 @@
         let params = {
           table: this.value1,
           x: this.dimensionValue,
-          yDimension: this.yDimensionValue,
-          measures: this.selectMeasureValue.map(item => item.value)
+          y: this.selectMeasureValue.map(item => item.value)
         }
         let res = await this.axios.post(`${this.baseApi}/custom/report/chart`, params)
         let resData = res.data.data
@@ -182,59 +170,27 @@
           this.echartsObj.echart1.clear() //因为无数据，所以清空ehcarts
         } else {
           this.ehcartsOptionsData.echart1 = resData
-          if (this.yDimensionValue === '') {
-            // 无堆叠维度处理逻辑
-            this.loadEchart1()
-          }else {
-            // 堆叠维度处理逻辑
-            this.loadStackEchart1()
-          }
+          this.loadEchart1()
         }
       },
       loadEchart1() {
         this.echartsObj.echart1.clear() //避免echarts渲染bug
-
-        // let legendData = Object.keys(this.ehcartsOptionsData.echart1.y)
-        let legendData = this.ehcartsOptionsData.echart1.y.map(item => item.stack).sort()
+        let legendData = Object.keys(this.ehcartsOptionsData.echart1.y)
         let xData = this.ehcartsOptionsData.echart1.x
-        let seriesData = this.ehcartsOptionsData.echart1.y.map(item => {
-          return {
-            name: item.stack,
-            // name: item.name,
+        let seriesData = []
+        for (let i in this.ehcartsOptionsData.echart1.y) {
+          seriesData.push({
+            name: i,
             type: 'bar',
-            data: item.data,
+            data: this.ehcartsOptionsData.echart1.y[i], // .不到，得用[]才可以
             lineStyle: {
               normal: {
                 width: 4
               }
             },
             // smooth: true,
-          }
-        }).sort((a, b) => {
-          let val1 = a.stack
-          let val2 = b.stack
-          if (val1 < val2) {
-            return -1
-          } else if (val1 > val2) {
-            return 1
-          } else {
-            return 0
-          }
-        })
-        console.log(seriesData,'哈哈')
-        // for (let i in this.ehcartsOptionsData.echart1.y) {
-        //   seriesData.push({
-        //     name: i,
-        //     type: 'bar',
-        //     data: this.ehcartsOptionsData.echart1.y[i], // .不到，得用[]才可以
-        //     lineStyle: {
-        //       normal: {
-        //         width: 4
-        //       }
-        //     },
-        //     // smooth: true,
-        //   })
-        // }
+          })
+        }
         let option = {
           color: this.colorArr,
           tooltip: {
@@ -255,137 +211,7 @@
           },
           legend: {
             // data:['蒸发量','降水量','平均温度']
-            data: legendData,
-            type: 'scroll',
-            bottom: 'bottom'
-          },
-          xAxis: [
-            {
-              type: 'category',
-              // data: ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'],
-              data: xData,
-              axisPointer: {
-                type: 'shadow'
-              },
-              axisLine: {
-                lineStyle: {
-                  color: '#f5f5f9'
-                }
-              },
-              axisLabel: {
-                color: '#959eaf',
-              },
-            }
-          ],
-          yAxis: {
-            type: 'value',
-            axisLine: {
-              lineStyle: {
-                color: '#f5f5f9'
-              }
-            },
-            axisLabel: {
-              color: '#959eaf'
-            },
-            splitLine: {
-              lineStyle: {
-                color: ['#f5f5f9']
-              }
-            },
-          },
-          series: seriesData
-          // series: [
-          //   {
-          //     name:'蒸发量',
-          //     type:'bar',
-          //     data:[2.0, 4.9, 7.0, 23.2, 25.6, 76.7, 135.6, 162.2, 32.6, 20.0, 6.4, 3.3]
-          //   },
-          //   {
-          //     name:'降水量',
-          //     type:'bar',
-          //     data:[2.6, 5.9, 9.0, 26.4, 28.7, 70.7, 175.6, 182.2, 48.7, 18.8, 6.0, 2.3]
-          //   },
-          //   {
-          //     name:'平均温度',
-          //     type:'line',
-          //     yAxisIndex: 1,
-          //     data:[2.0, 2.2, 3.3, 4.5, 6.3, 10.2, 20.3, 23.4, 23.0, 16.5, 12.0, 6.2]
-          //   }
-          // ]
-        };
-        this.echartsObj.echart1.setOption(option)
-      },
-      loadStackEchart1() {
-        this.echartsObj.echart1.clear() //避免echarts渲染bug
-
-        // let legendData = Object.keys(this.ehcartsOptionsData.echart1.y)
-        // let legendData = this.ehcartsOptionsData.echart1.y.map(item => item.name)
-        let legendData = this.ehcartsOptionsData.echart1.y.map(item => {
-          return `${item.stack}-${item.name}`
-        }).sort()
-        let xData = this.ehcartsOptionsData.echart1.x
-        let seriesData = this.ehcartsOptionsData.echart1.y.map(item => {
-          return {
-            name: `${item.stack}-${item.name}`,
-            // name: item.name,
-            type: 'bar',
-            data: item.data,
-            stack: item.stack,
-            lineStyle: {
-              normal: {
-                width: 2
-              }
-            },
-            // smooth: true,
-          }
-        }).sort((a, b) => {
-          let val1 = a.name
-          let val2 = b.name
-          if (val1 < val2) {
-            return -1
-          } else if (val1 > val2) {
-            return 1
-          } else {
-            return 0
-          }
-        })
-        console.log(seriesData,'哈哈')
-        // for (let i in this.ehcartsOptionsData.echart1.y) {
-        //   seriesData.push({
-        //     name: i,
-        //     type: 'bar',
-        //     data: this.ehcartsOptionsData.echart1.y[i], // .不到，得用[]才可以
-        //     lineStyle: {
-        //       normal: {
-        //         width: 4
-        //       }
-        //     },
-        //     // smooth: true,
-        //   })
-        // }
-        let option = {
-          color: this.colorArr,
-          tooltip: {
-            trigger: 'axis',
-            axisPointer: {
-              // type: 'cross',
-              // crossStyle: {
-              //   color: '#999'
-              // }
-              type: 'shadow'
-            }
-          },
-          toolbox: {
-            feature: {
-              magicType: {show: true, type: ['line', 'bar']},
-              restore: {show: true},
-            }
-          },
-          legend: {
-            // data:['蒸发量','降水量','平均温度']
-            data: legendData,
-            type: 'scroll',
-            bottom: 'bottom'
+            data: legendData
           },
           xAxis: [
             {
@@ -460,9 +286,6 @@
         // }
       },
       dimensionValue: function (nVal) {
-        this.getEchartData()
-      },
-      yDimensionValue: function (nVal) {
         this.getEchartData()
       }
     },
