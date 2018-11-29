@@ -47,8 +47,9 @@
           <div class="title">堆叠维度<span style="color: #999;">(可选)</span></div>
           <el-select v-model="yDimensionValue" clearable placeholder="请选择" style="width: 100%;">
             <el-option
-              v-for="item in dimensionData"
+              v-for="item in yDimensionData"
               :key="item.value"
+              :disabled="item.disabled"
               :label="item.label"
               :value="item.value">
             </el-option>
@@ -89,6 +90,7 @@
         yDimensionValue: '',
         dimensionValue: '',
         dimensionData: [],
+        yDimensionData: [],
         selectMeasureValue: [],
         tableLoading: false,
         // baseApi: 'http://10.122.33.101:9095',
@@ -151,6 +153,7 @@
             flag: item.flag
           }
         })
+        this.yDimensionData =  this.dimensionData
         this.measureData = resData.group.map(item => {
           return {
             value: item.value,
@@ -460,11 +463,28 @@
         // }
       },
       dimensionValue: function (nVal) {
+        if (nVal === this.yDimensionValue) {
+          this.yDimensionValue = ''
+        }
+        this.yDimensionData = this.yDimensionData.map(item => {
+          if (item.value === nVal) {
+            return {
+              value: item.value,
+              label: item.label,
+              disabled: true
+            }
+          } else {
+            return {
+              value: item.value,
+              label: item.label,
+            }
+          }
+        })
         this.getEchartData()
       },
       yDimensionValue: function (nVal) {
         this.getEchartData()
-      }
+      },
     },
     created() {
       this.initPage()
