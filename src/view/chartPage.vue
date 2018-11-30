@@ -169,6 +169,7 @@
         this.getEchartData()
       },
       async getEchartData() {
+        this.tableLoading = true
         let params = {
           table: this.value1,
           x: this.dimensionValue,
@@ -317,6 +318,7 @@
           // ]
         };
         this.echartsObj.echart1.setOption(option)
+        this.tableLoading = false
       },
       loadStackEchart1() {
         this.echartsObj.echart1.clear() //避免echarts渲染bug
@@ -375,8 +377,9 @@
               // crossStyle: {
               //   color: '#999'
               // }
-              type: 'shadow'
-            }
+              type: 'shadow',
+            },
+            // confine: true
           },
           toolbox: {
             feature: {
@@ -445,6 +448,7 @@
           // ]
         };
         this.echartsObj.echart1.setOption(option)
+        this.tableLoading = false
       }
     },
     components: {
