@@ -52,7 +52,7 @@
             </div>
           </div>
 
-          <div class="content-table" v-loading="tableLoading">
+          <div class="content-table" v-loading="tableLoading" v-if="isShowTable">
             <!--height: calc(100vh - 240px);-->
             <ag-grid-vue style="width: 100%; height: 74vh;" class="ag-theme-balham"
                          :gridOptions="SampleTable"
@@ -70,6 +70,9 @@
             <!--:total="100">-->
             <!--</el-pagination>-->
           </div>
+          <div class="content-table no-data-tips" v-else="isShowTable">
+            <p style="text-align: center; font-size: 40px; color: #999; height: 300px; line-height: 300px;">No Data...</p>
+          </div>
         </el-col>
       </el-row>
     </div>
@@ -85,6 +88,7 @@
   export default {
     data() {
       return {
+        isShowTable: true,
         selectDimensionValue: [],
         selectMeasureValue: [],
         tableLoading: false,
@@ -216,7 +220,7 @@
         this.$router.push({path: '/chartPage'})
       },
       clickDimensionElement(params) {
-        console.log(params, '点击的当前值')
+        // console.log(params, '点击的当前值')
         if (params.flag) {
           // 新增加的
           this.newArr.push(params)
@@ -233,7 +237,7 @@
         this.getTableData()
       },
       clickMeasureElement(params) {
-        console.log(params, '点击的当前值')
+        // console.log(params, '点击的当前值')
         if (params.flag) {
           // 新增加的
           this.newArr.push(params)
@@ -363,6 +367,7 @@
         this.tableLoading = false
       },
       async getTableData() {
+        this.isShowTable = true
         this.tableLoading = true
         this.currentPage = 1
         // console.log(this.newArr)
@@ -417,6 +422,7 @@
           }))
           this.SampleTable.api.setRowData(this.SampleData)
         } else {
+          this.isShowTable = false
           this.$message({
             message: 'No Data ...',
             type: 'warning'
